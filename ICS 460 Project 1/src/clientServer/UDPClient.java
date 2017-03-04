@@ -58,8 +58,16 @@ public class UDPClient {
 		
 		} catch (IOException ex) {
 			ex.printStackTrace();
-		}
-		 
+		}		 
+	}
+	
+	public byte[] splitFile(byte[] byteArray){
+		return null;
+		
+	}
+	
+	public void createChksum(){
+		
 	}
 	
 	public void getData(String input){
