@@ -16,32 +16,52 @@ public class UDPClient {
 	int windowSize=0;
 	double curruptData=0;
 	String filePath = "C:/Users/Huy/Desktop/Note.txt" ;
-	
+	boolean done = true;
+
 	public UDPClient(String input){
 		getData(input);  // method to get data and assign it to specific variable
 
 		try (DatagramSocket socket = new DatagramSocket(0)) {
 			// find the IP address of the server from its name
 			InetAddress hostIPAddress = InetAddress.getByName(HOSTNAME);
-			System.out.println("Attempting to send to " + hostIPAddress + " via UDP port " + Port);
-			
+			//System.out.println("Attempting to send to " + hostIPAddress + " via UDP port " + Port);
+
 			File myFile = new File(filePath);
 			byte [] fileArray = new byte [(int)myFile.length()];
 			FileInputStream inputStream = new FileInputStream(myFile);
 			inputStream.read(fileArray);
+			System.out.println("length: "+fileArray.length);
+
+			int start=0;
+			int end=fileArray.length/packetSize;
+			byte[] receiveData = new byte[packetSize];
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			
-			DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
-			socket.send(request);
+			for(int i=0;i<=end;i++){
+				Packet packet = new Packet(splitFile(fileArray,start),packetSize);
+				byte[] sendPacket = packet.createPacket();
+				DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
+				socket.send(request);
+				
+				socket.receive(receivePacket);
+				
+				start+=packetSize;
+			}
+			
+			
+//			DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
+//			socket.send(request);
+
 			
 			//int dataLength = 1000;
 			//byte[] receiveData = new byte[packetSize];
 			//DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			
+
 			/*while(true){
 				// ask the user to enter a message
 				//System.out.println("Enter Message:");
 				//String message = scan.next();
-				
+
 				byte[] sendData = new byte[message.length() * 8];
 				sendData = message.getBytes();
 				DatagramPacket request = new DatagramPacket(sendData, sendData.length, hostIPAddress, PORT);
@@ -51,42 +71,44 @@ public class UDPClient {
 				socket.receive(receivePacket);
 				String response = new String(receivePacket.getData());
 
+
 				// trim the message to remove empty bytes
 				response = response.trim();
 				System.out.println("Received: " + response);
 			}*/
-		
+
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}		 
 	}
-	
-	public byte[] splitFile(byte[] byteArray){
-		return null;
-		
-	}
-	
+
+	public byte[] splitFile(byte[] byteArray,int start){
+		byte[] temp= new byte[packetSize];
+		System.arraycopy(byteArray, start, temp, 0, packetSize);
+		return temp;
+}
+
 	public void createChksum(){
-		
+
 	}
-	
+
 	public void getData(String input){
 		String[] inputArray = input.split(" ");
 		for(int i = 0; i<inputArray.length-1; i++){
 			int temp=i+1;	
 			switch(inputArray[i]){
-				case "-s":
-					packetSize = Integer.parseInt(inputArray[temp]);
-					break;
-				case "t":
-					timeInterval= Integer.parseInt(inputArray[temp]);
-					break;
-				case "-w":
-					windowSize= Integer.parseInt(inputArray[temp]);
-					break;
-				case "-d":
-					curruptData= Double.parseDouble(inputArray[temp]);
-					break;			
+			case "-s":
+				packetSize = Integer.parseInt(inputArray[temp]);
+				break;
+			case "t":
+				timeInterval= Integer.parseInt(inputArray[temp]);
+				break;
+			case "-w":
+				windowSize= Integer.parseInt(inputArray[temp]);
+				break;
+			case "-d":
+				curruptData= Double.parseDouble(inputArray[temp]);
+				break;			
 			}
 		}
 		Port = Integer.parseInt(inputArray[inputArray.length-1]);

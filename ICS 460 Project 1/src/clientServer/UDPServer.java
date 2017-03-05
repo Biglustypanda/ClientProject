@@ -21,6 +21,7 @@ public class UDPServer {
 
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 		System.out.println("The UDP Server is waiting for incoming messages on port " + PORT);
+		
 		serverSocket.receive(receivePacket);
 		byte[] message = receivePacket.getData();
 		//String strMessage = new String(receivePacket.getData());
