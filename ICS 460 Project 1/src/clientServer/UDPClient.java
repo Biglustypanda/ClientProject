@@ -1,11 +1,15 @@
 package clientServer;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class UDPClient {
@@ -17,8 +21,9 @@ public class UDPClient {
 	double curruptData=0;
 	String filePath = "C:/Users/Huy/Desktop/Note.txt" ;
 	boolean done = true;
+	ArrayList <Packet> list = new ArrayList<Packet>();
 
-	public UDPClient(String input){
+	public UDPClient(String input) throws ClassNotFoundException{
 		getData(input);  // method to get data and assign it to specific variable
 
 		try (DatagramSocket socket = new DatagramSocket(0)) {
@@ -33,26 +38,41 @@ public class UDPClient {
 			System.out.println("length: "+fileArray.length);
 
 			int start=0;
-			int end=fileArray.length/packetSize;
 			byte[] receiveData = new byte[packetSize];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			
-			for(int i=0;i<=end;i++){
-				Packet packet = new Packet(splitFile(fileArray,start),packetSize);
-				byte[] sendPacket = packet.createPacket();
-				DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
-				socket.send(request);
-				
-				socket.receive(receivePacket);
-				
-				start+=packetSize;
-			}
+			splitFile(fileArray,start);   //add all the packets into a list
 			
-			
-//			DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
-//			socket.send(request);
+			while(done){
+				for(int i=0;i<list.size();i++){
+					byte[] sendPacket = list.get(i).createPacket();
+					DatagramPacket request = new DatagramPacket(sendPacket,sendPacket.length,hostIPAddress,Port);
+					socket.send(request);
 
-			
+//					socket.receive(receivePacket);
+//				    ByteArrayInputStream in = new ByteArrayInputStream(receivePacket.getData());
+//				    ObjectInputStream is = new ObjectInputStream(in);
+//					Packet received = (Packet)is.readObject();
+				}
+				break;
+			}
+
+			//			for(int i=0;i<=end;i++){
+			//				Packet packet = new Packet(splitFile(fileArray,start),packetSize);
+			//				byte[] sendPacket = packet.createPacket();
+			//				DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
+			//				socket.send(request);
+			//				
+			//				socket.receive(receivePacket);
+			//				
+			//				start+=packetSize;
+			//			}
+
+
+			//			DatagramPacket request = new DatagramPacket(fileArray,fileArray.length,hostIPAddress,Port);
+			//			socket.send(request);
+
+
 			//int dataLength = 1000;
 			//byte[] receiveData = new byte[packetSize];
 			//DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -82,11 +102,24 @@ public class UDPClient {
 		}		 
 	}
 
-	public byte[] splitFile(byte[] byteArray,int start){
-		byte[] temp= new byte[packetSize];
-		System.arraycopy(byteArray, start, temp, 0, packetSize);
-		return temp;
-}
+	public void splitFile(byte[] byteArray,int start){
+		int seqno=1;
+		while(start<byteArray.length){
+			byte[] temp= new byte[packetSize];
+			System.out.println(start);
+			System.arraycopy(byteArray, start, temp, 0, packetSize);
+			Packet packet = new Packet(temp,packetSize,seqno);
+			list.add(packet);
+			
+			start+=packetSize;
+			if(byteArray.length-start<packetSize){
+				packetSize=byteArray.length-start;
+			}
+			
+			System.out.println(start);
+			seqno++;
+		}
+	}
 
 	public void createChksum(){
 
@@ -114,7 +147,7 @@ public class UDPClient {
 		Port = Integer.parseInt(inputArray[inputArray.length-1]);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException {
 		Scanner scan = new Scanner(System.in);
 		System.out.println("The UDP Client has been startng up, please enter port: \n");
 		String input = scan.nextLine();

@@ -10,23 +10,28 @@ public class Packet {
 	byte[] data; //0-500 bytes. Data packet only. Variable
 	int packetSize;
 	
-	public Packet(byte[]data,int size){
+	public Packet(byte[]data,int size,int seqno){
 		this.data=data;
-		this.packetSize= size;
+		this.packetSize= size+12;
+		this.seqno=seqno;
 		seqno=1;
 	}
 	
 	public byte[] createPacket(){
 		ByteBuffer buffer = ByteBuffer.allocate(packetSize);
 		//pack all the stuff into packet
-		buffer.putShort(cksum);
+		//buffer.putShort(cksum);
 		buffer.put(data);
 		buffer.putInt(seqno);
-		
-		//return buffer.array();
-		return data;
+		//int test = buffer.getInt(seqno);
+		//System.out.println("test: "+test);
+		return buffer.array();
 	}
 	
+	public int getSeqno() {
+		return seqno;
+	}
+
 	public short createChk(byte[] data){
 		String s1;
 		String s2;
