@@ -35,6 +35,28 @@ public class UDPServer {
 			System.out.println("exception: " + e);
 		}
 		
+		public void getData(String input){
+			String[] inputArray = input.split(" ");
+			for(int i = 0; i<inputArray.length-1; i++){
+				int temp=i+1;	
+				switch(inputArray[i]){
+				case "-s":
+					packetSize = Integer.parseInt(inputArray[temp]);
+					break;
+				case "t":
+					timeInterval= Integer.parseInt(inputArray[temp]);
+					break;
+				case "-w":
+					windowSize= Integer.parseInt(inputArray[temp]);
+					break;
+				case "-d":
+					curruptData= Double.parseDouble(inputArray[temp]);
+					break;			
+				}
+			}
+			Port = Integer.parseInt(inputArray[inputArray.length-1]);
+		}
+		
 		
 //		while (true) {
 //			System.out.println("The UDP Server is waiting for incoming messages on port " + PORT);
@@ -57,6 +79,5 @@ public class UDPServer {
 
 		//}
 
-	}
 
 }
